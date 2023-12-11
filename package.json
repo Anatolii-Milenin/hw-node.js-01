@@ -1,0 +1,26 @@
+{
+  "name": "hw-node.js-01",
+  "version": "1.0.0",
+  "description": "clear",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Anatolii-Milenin/hw-node.js-01.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Anatolii-Milenin/hw-node.js-01/issues"
+  },
+  "homepage": "https://github.com/Anatolii-Milenin/hw-node.js-01#readme",
+  "dependencies": {
+    "colors": "^1.4.0",
+    "commander": "^11.1.0",
+    "nodemon": "^3.0.2"
+  }
+}
