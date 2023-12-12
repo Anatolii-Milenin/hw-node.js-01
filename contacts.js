@@ -1,102 +1,94 @@
 const fs = require("fs").promises;
-require("colors");
 const path = require("path");
 
-const contactsPath = path.join("./db", "contacts.json");
-const contactsDataBase = require("./db/contacts.json");
+const contactsPath = path.join(__dirname, "db", "contacts.json");
+let contactsDataBase;
 
-function parseContacts(data) {
+async function parseContacts() {
+  const data = await fs.readFile(contactsPath);
   return JSON.parse(data.toString());
 }
 
-function listContacts() {
-  fs.readFile(contactsPath)
-    .then((data) => {
-      return parseContacts(data);
-    })
-    .then((list) => {
-      return [...list].sort((a, b) => {
-        return a.name.localeCompare(b.name);
-      });
-    })
-    .then((result) => console.table(result))
-    .catch((error) => console.log(error.message));
-}
-
-function getContactById(contactId) {
-  fs.readFile(contactsPath)
-    .then((data) => {
-      const contacts = parseContacts(data);
-      return contacts;
-    })
-    .then((contacts) => {
-      const contactsFilter = contacts.filter(
-        (contact) => contact.id === contactId
-      );
-      if (contactsFilter.length > 0) {
-        console.table(contactsFilter);
-        return;
-      }
-      console.log(`There is no contact with the id: ${contactId}.`.red);
-    })
-    .catch((err) => console.log(err.message));
-}
-
-function removeContact(contactId) {
-  fs.readFile(contactsPath)
-    .then((data) => {
-      const contacts = parseContacts(data);
-      return contacts;
-    })
-    .then((contacts) => {
-      const contactIndex = contacts.findIndex(
-        (contact) => contact.id === contactId
-      );
-      if (contactIndex !== -1) {
-        contacts.splice(contactIndex, 1);
-
-        fs.writeFile(contactsPath, JSON.stringify(contacts), (error) => {
-          if (error) {
-            console.log(error.message);
-            return;
-          }
-        });
-        console.log(`Contact with the id ${contactId} has been removed.`.green);
-      } else {
-        console.log(`There is no contact with the id: ${contactId}.`.red);
-      }
-    })
-    .catch((error) => console.log(error.message));
-}
-
-function addContact(name, email, phone) {
-  const contact = {
-    id: (
-      Math.floor(Math.random() * 100000) + contactsDataBase.length
-    ).toString(),
-    name,
-    email,
-    phone,
-  };
-
-  if (name === undefined || email === undefined || phone === undefined) {
-    console.log(
-      "Please set all arguments (name, email, phone) to add contact".red
-    );
-    return;
+async function listContacts() {
+  try {
+    const list = await parseContacts();
+    const sortedList = [...list].sort((a, b) => a.name.localeCompare(b.name));
+    console.table(sortedList);
+    return sortedList;
+  } catch (error) {
+    console.log(error.message);
+    throw error;
   }
+}
 
-  contactsDataBase.push(contact);
-
-  const contactsUpdate = JSON.stringify(contactsDataBase);
-
-  fs.writeFile(contactsPath, contactsUpdate, (error) => {
-    if (error) {
-      console.log("Oops, something went wrong:".red, error.message);
-      return;
+async function getContactById(contactId) {
+  try {
+    const contacts = await parseContacts();
+    const contactsFilter = contacts.filter(
+      (contact) => contact.id === contactId
+    );
+    if (contactsFilter.length > 0) {
+      console.table(contactsFilter);
+      return contactsFilter[0];
     }
-  });
-  console.log(`${name} has been added to your contacts`.green);
+    console.log(null);
+    return null;
+  } catch (error) {
+    console.log(error.message);
+    throw error;
+  }
+}
+
+async function removeContact(contactId) {
+  try {
+    const contacts = await parseContacts();
+    const contactIndex = contacts.findIndex(
+      (contact) => contact.id === contactId
+    );
+    if (contactIndex !== -1) {
+      const removedContact = contacts.splice(contactIndex, 1)[0];
+
+      await fs.writeFile(contactsPath, JSON.stringify(contacts));
+      console.log(`Contact with the id ${contactId} has been removed.`);
+      console.table([removedContact]);
+      return removedContact;
+    } else {
+      console.log(null);
+      return null;
+    }
+  } catch (error) {
+    console.log(error.message);
+    throw error;
+  }
+}
+
+async function addContact(name, email, phone) {
+  try {
+    const contacts = await parseContacts();
+    const contact = {
+      id: (Math.floor(Math.random() * 100000) + contacts.length).toString(),
+      name,
+      email,
+      phone,
+    };
+
+    if (!name || !email || !phone) {
+      console.log(
+        "Please provide all arguments (name, email, phone) to add a contact"
+      );
+      return null;
+    }
+
+    contacts.push(contact);
+
+    await fs.writeFile(contactsPath, JSON.stringify(contacts));
+    console.log(`${name} has been added to your contacts.`);
+    console.table([contact]);
+    return contact;
+  } catch (error) {
+    console.log("Oops, something went wrong:", error.message);
+    throw error;
+  }
 }
 
 module.exports = {
